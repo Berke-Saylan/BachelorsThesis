@@ -36,21 +36,40 @@ NUM_SIMULATIONS = 10
 # Get the directory of the current script
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
-# Input CSV path (go one level up)
-input_csv_path = os.path.join(script_dir, '..', 'istanbul_buildings_with_unique_id.csv')
+# Identify your 3 part-files for buildings in Istanbul
+part_files = [
+    os.path.join(script_dir, '..', 'istanbul_buildings_part1.csv'),
+    os.path.join(script_dir, '..', 'istanbul_buildings_part2.csv'),
+    os.path.join(script_dir, '..', 'istanbul_buildings_part3.csv')
+]
 
-# Normalize the path to handle different OS directory structures
-input_csv_path = os.path.abspath(input_csv_path)
+
+# Find which part-file contains the chosen district
+file_with_district = None
+for fpath in part_files:
+    try:
+        temp_df = pd.read_csv(fpath, delimiter=';', usecols=['ilce_adi'])
+        if DISTRICT_NAME in temp_df['ilce_adi'].unique():
+            file_with_district = fpath
+            break
+    except Exception as e:
+        print(f"Error reading {fpath}: {e}")
+
+if file_with_district is None:
+    raise ValueError(f"District '{DISTRICT_NAME}' not found in any of the part-files. "
+                     "Check your data or partition files.")
+
+print(f"Found district '{DISTRICT_NAME}' in: {file_with_district}")
 
 # Output directory (to store the 100 GeoJSON files)
 output_dir = os.path.join(script_dir, 'mc_selected_10_buildings')
 os.makedirs(output_dir, exist_ok=True)
 
-# Read input CSV
+# Now read only the part-file that contains the district
 try:
-    df = pd.read_csv(input_csv_path, delimiter=';')
+    df = pd.read_csv(file_with_district, delimiter=';')
 except Exception as e:
-    print(f"Error reading the input CSV file: {e}")
+    print(f"Error reading the part-file for district '{DISTRICT_NAME}': {e}")
     raise
 
 # Filter DataFrame to only include buildings in the specified district
@@ -155,6 +174,4 @@ for i in range(1, NUM_SIMULATIONS + 1):
     except Exception as e:
         print(f"Error saving the GeoJSON file for run {i}: {e}")
         raise
-
-
 

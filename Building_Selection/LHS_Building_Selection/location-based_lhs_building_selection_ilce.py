@@ -38,19 +38,38 @@ NUM_SIMULATIONS = 10
 # Get the directory of the current script
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
-# Input CSV path (go one level up)
-input_csv_path = os.path.join(script_dir, '..', 'istanbul_buildings_with_unique_id.csv')
+# Identify your 3 part-files (in the parent directory).
+part_files = [
+    os.path.join(script_dir, '..', 'istanbul_buildings_part1.csv'),
+    os.path.join(script_dir, '..', 'istanbul_buildings_part2.csv'),
+    os.path.join(script_dir, '..', 'istanbul_buildings_part3.csv')
+]
 
-# Normalize the path to handle different OS directory structures
-input_csv_path = os.path.abspath(input_csv_path)
+# Find which part-file contains the chosen district
+file_with_district = None
+for fpath in part_files:
+    try:
+        # Only read the 'ilce_adi' column to check if DISTRICT_NAME is in this file
+        temp_df = pd.read_csv(fpath, delimiter=';', usecols=['ilce_adi'])
+        if DISTRICT_NAME in temp_df['ilce_adi'].unique():
+            file_with_district = fpath
+            break
+    except Exception as e:
+        print(f"Error reading {fpath}: {e}")
+
+if file_with_district is None:
+    raise ValueError(f"District '{DISTRICT_NAME}' not found in any of the part-files. "
+                     "Check your data or partition files.")
+
+print(f"Found district '{DISTRICT_NAME}' in: {file_with_district}")
+
+# Now read only the part-file that contains the district
+df = pd.read_csv(file_with_district, delimiter=';')
+df_district = df[df['ilce_adi'] == DISTRICT_NAME]
 
 # Output directory (will contain 1..100 runs)
 output_dir = os.path.join(script_dir, 'lhs_selected_10_buildings')
 os.makedirs(output_dir, exist_ok=True)
-
-# Read input CSV once
-df = pd.read_csv(input_csv_path, delimiter=';')
-df_district = df[df['ilce_adi'] == DISTRICT_NAME]
 
 # Dictionary to hold damage count per mahalle
 district_damage = {}
@@ -159,6 +178,7 @@ for i in range(1, NUM_SIMULATIONS + 1):
 
     print(f"[Run {i}] GeoJSON file saved: {output_geojson_path}")
     print(f"[Run {i}] Total selected buildings: {len(all_selected_building_ids)}")
+
 
 
 
