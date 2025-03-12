@@ -128,7 +128,7 @@ try:
     # Network and Workspace Setup
     # Path to your network dataset .gdb
     # Example: ...\Network_Data\turkiye_network.gdb\Turkiye_Network\TNDS
-    network_gdb = r"C:\Users\berks\OneDrive\Belgeler\ArcGIS\Packages\Turkiye_Network_0df2dd\commondata\turkiye_network.gdb"
+    network_gdb = #ENTER YOUR OWN ARCGIS NETWORK DATASET
     network_dataset = os.path.join(network_gdb, "Turkiye_Network", "TNDS")
 
     # Use that .gdb as the workspace
