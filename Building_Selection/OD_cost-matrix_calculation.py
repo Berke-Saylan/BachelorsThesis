@@ -30,8 +30,8 @@ Methodology
 
 3. Select Origins and Destinations
    - Depending on the scenario (LDC to POD or POD to DemandPoints), features in the
-     shapefile are filtered with SQL queries like `"FID" = 1` (for a single origin)
-     or `"FID" >= 1 AND \"FID\" <= 173"` (for multiple destinations).
+     shapefile are filtered with SQL queries like `"FID" = 0` (for a single origin)
+     or `"FID" >= 0 AND \"FID\" <= 172"` (for multiple destinations).
 
 4. Create OD Cost Matrix
    - The script uses `arcpy.na.MakeODCostMatrixLayer()` with a chosen cost attribute,
@@ -69,8 +69,8 @@ Important Note
 - Geodatabase Dependency: A valid ArcGIS-compatible `.gdb` workspace is
   needed to store the OD Cost Matrix and sublayers.
 
-- Field Ranges: SQL expressions for feature selection (e.g., `"FID" = 1"`,
-  `"FID" <= 173"`, etc.) must match the IDs in your data.
+- Field Ranges: SQL expressions for feature selection (e.g., `"FID" = 0"`,
+  `"FID" <= 172"`, etc.) must match the IDs in your data.
 """
 
 import arcpy
@@ -83,9 +83,9 @@ try:
     # User Parameters
     DISTRICT_NAME = "KADIKÖY"   # District name
     NUM_SIMULATIONS = 2         # How many scenario shapefiles you have
-    USE_LHS = False              # Set False for MC approach
-    is_LDC_to_POD = False        # True = LDC to POD, False = POD to DemandPoints
-    impedance_attribute = "TruckingDuration"  # Adjust if needed
+    USE_LHS = True             # Set False for MC approach
+    is_LDC_to_POD = True       # True = LDC to POD, False = POD to DemandPoints
+    impedance_attribute = "TruckingDuration"  # Adjust if needed to another impedance available in your network dataset
 
     # Path Setups
     # Script directory
@@ -142,7 +142,7 @@ try:
         arcpy.management.CreateFileGDB(folder_for_gdb, gdb_name)
 
     # Search tolerance
-    search_tolerance = "100 Meters"
+    search_tolerance = "150 Meters"
 
     # MAIN PROCESS
     for i in range(1, NUM_SIMULATIONS + 1):
@@ -180,14 +180,14 @@ try:
         arcpy.management.MakeFeatureLayer(input_shp, destinations_layer)
 
         # SELECTION LOGIC
-        # For LDC to POD: origins = FID=1, destinations = FID in [1..173]
-        # For POD to Demand: origins = FID in [1..173], destinations = FID in [1..950]
+        # For LDC to POD: origins = FID=0, destinations = FID in [0..172]
+        # For POD to Demand: origins = FID in [0..172], destinations = FID in [0..949]
         if is_LDC_to_POD:
-            sql_origins = '"FID" = 1'
-            sql_destinations = '"FID" >= 1 AND "FID" <= 173'
+            sql_origins = '"FID" = 0'
+            sql_destinations = '"FID" >= 0 AND "FID" <= 172'
         else:
-            sql_origins = '"FID" >= 1 AND "FID" <= 173'
-            sql_destinations = '"FID" >= 1 AND "FID" <= 950'
+            sql_origins = '"FID" >= 0 AND "FID" <= 172'
+            sql_destinations = '"FID" >= 0 AND "FID" <= 949'
 
         arcpy.management.SelectLayerByAttribute(origins_layer, "NEW_SELECTION", sql_origins)
         arcpy.management.SelectLayerByAttribute(destinations_layer, "NEW_SELECTION", sql_destinations)
